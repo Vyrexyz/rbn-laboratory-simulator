@@ -4,7 +4,7 @@
 A self-contained, offline Random Boolean Network laboratory and simulation environment — delivered as a single HTML file with no installation, server, or external dependencies required. Open it in any browser and it runs.
 
 ## What it does
-<img width="690" height="380" alt="rbn-tissue" src="https://github.com/user-attachments/assets/3ab128a5-530d-4071-8e13-ec1d36f0bb39" />
+<img width="1919" height="912" alt="Screenshot 2026-08-24 215030" src="https://github.com/user-attachments/assets/022c83df-a205-4f11-b9b3-1cb086e2b00d" />
 Random Boolean Networks are a foundational model in complex systems and computational biology, used to study how simple rules produce emergent, organism-like dynamics. This simulator lets you build, run, and classify RBNs using five separate published classification schemes, rather than a single ad hoc method:
 
 - Gershenson (2002)
@@ -16,12 +16,14 @@ Random Boolean Networks are a foundational model in complex systems and computat
 Each framework translates peer-reviewed theoretical work from network science literature into interactive, working code.
 
 ## Design
+<img width="1919" height="912" alt="Screenshot 2026-08-24 215046" src="https://github.com/user-attachments/assets/572edd92-7078-4eb9-8d8f-f27ad9a33efa" />
 
 Instead of a conventional technical dashboard, the interface uses a biologically realistic visual language:
 
 - A dense Voronoi-based phase-contrast tissue rendering system to represent network structure the way a microscopy image would
 - Amber fluorescent signalling-thread overlays layered on top to visualize signal propagation through the network
 - A field-notebook, parchment-style aesthetic — built to feel like a lab instrument, not a generic app
+<img width="1919" height="912" alt="Screenshot 2026-08-24 215046" src="https://github.com/user-attachments/assets/4d4bd33e-6936-419f-940b-04eba363bced" />
 
 ## How to run
 
