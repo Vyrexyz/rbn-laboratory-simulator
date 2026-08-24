@@ -16,7 +16,7 @@ Random Boolean Networks are a foundational model in complex systems and computat
 Each framework translates peer-reviewed theoretical work from network science literature into interactive, working code.
 
 ## Design
-<img width="1919" height="912" alt="Screenshot 2026-08-24 215030" src="https://github.com/user-attachments/assets/59529310-744e-4015-9c35-bede29716c5e" />
+<img width="1919" height="912" alt="Screenshot 2026-08-24 215046" src="https://github.com/user-attachments/assets/ad0f1c15-2c38-43ae-8b4d-0c9a7c99ced1" />
 
 Instead of a conventional technical dashboard, the interface uses a biologically realistic visual language:
 
