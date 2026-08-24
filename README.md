@@ -4,7 +4,7 @@
 A self-contained, offline Random Boolean Network laboratory and simulation environment — delivered as a single HTML file with no installation, server, or external dependencies required. Open it in any browser and it runs.
 
 ## What it does
-<img width="1919" height="912" alt="Screenshot 2026-08-24 215030" src="https://github.com/user-attachments/assets/3fd6e8dc-7a17-4e0e-b134-1ecdf59b78d9" />
+<img width="1919" height="912" alt="Living tissue view — network mid-simulation" src="https://github.com/user-attachments/assets/7002dc38-5b06-4286-8af7-5b9993700b5f" />
 Random Boolean Networks are a foundational model in complex systems and computational biology, used to study how simple rules produce emergent, organism-like dynamics. This simulator lets you build, run, and classify RBNs using five separate published classification schemes, rather than a single ad hoc method:
 
 - Gershenson (2002)
@@ -16,15 +16,14 @@ Random Boolean Networks are a foundational model in complex systems and computat
 Each framework translates peer-reviewed theoretical work from network science literature into interactive, working code.
 
 ## Design
-<img width="1919" height="912" alt="Screenshot 2026-08-24 215046" src="https://github.com/user-attachments/assets/ad0f1c15-2c38-43ae-8b4d-0c9a7c99ced1" />
+<img width="1919" height="912" alt="biologically-realistic-visual" src="https://github.com/user-attachments/assets/6a4b28c3-b958-4e88-a7ac-e0210e13fe9c" />
 
 Instead of a conventional technical dashboard, the interface uses a biologically realistic visual language:
 
 - A dense Voronoi-based phase-contrast tissue rendering system to represent network structure the way a microscopy image would
 - Amber fluorescent signalling-thread overlays layered on top to visualize signal propagation through the network
 - A field-notebook, parchment-style aesthetic — built to feel like a lab instrument, not a generic app
-<img width="1919" height="907" alt="Screenshot 2026-08-24 215057" src="https://github.com/user-attachments/assets/e3110028-8119-4ba9-8666-84a5ea471fd2" />
-
+<img width="1919" height="907" alt="Cell fate map" src="https://github.com/user-attachments/assets/1afd59d8-4d78-4166-8928-db840360d909" />
 
 ## How to run
 
