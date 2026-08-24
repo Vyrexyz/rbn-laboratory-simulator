@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Regulatory Network Notebook — Random Boolean Networks</title>
+<style>
+  :root{
+    --paper:#e9e2cd;
+    --paper-fiber: rgba(107,97,68,0.05);
+    --card:#f6f1e2;
+    --card-2:#f0e9d6;
+    --ink:#2c2618;
+    --ink-dim:#665c46;
+    --ink-faint:#9a8f74;
+    --line:#cdbf9c;
+    --line-soft:#ddd2b3;
+    --moss:#59774a;
+    --moss-dark:#33452a;
+    --moss-pale:#a9c194;
+    --slate:#57647d;
+    --slate-dark:#333c4d;
+    --slate-pale:#b6c0d4;
+    --rust:#a85630;
+    --rust-dark:#6f3a1f;
+    --plum:#79475f;
+    --serif: Georgia, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+    --sans: "Helvetica Neue", Arial, sans-serif;
+    --mono: "Courier New", ui-monospace, Menlo, Consolas, monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;color:var(--ink);font-family:var(--serif);}
+  body{
+    background-color:var(--paper);
+    background-image:
+      repeating-radial-gradient(circle at 20% 15%, var(--paper-fiber) 0px, transparent 2px, transparent 3px),
+      repeating-radial-gradient(circle at 80% 70%, var(--paper-fiber) 0px, transparent 2px, transparent 3px),
+      repeating-linear-gradient(to bottom, transparent, transparent 27px, rgba(107,97,68,0.05) 27px, rgba(107,97,68,0.05) 28px);
+    background-size: 5px 5px, 6px 6px, 100% 28px;
+    min-height:100vh;
+  }
+  ::selection{background:var(--moss-pale);color:var(--moss-dark);}
+  ::-webkit-scrollbar{height:9px;width:9px;}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:5px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+
+  .app{max-width:1420px;margin:0 auto;padding:34px 28px 70px;}
+
+  /* ---------------- specimen label ---------------- */
+  .specimen-label{
+    display:flex;align-items:stretch;gap:0;border:1px solid var(--ink);background:var(--card);
+    margin-bottom:18px;font-family:var(--mono);font-size:10px;overflow:hidden;
+  }
+  .specimen-label .barcode{
+    width:120px;flex:none;
+    background-image:repeating-linear-gradient(90deg, var(--ink) 0px, var(--ink) 2px, transparent 2px, transparent 3px, var(--ink) 3px, var(--ink) 4px, transparent 4px, transparent 7px, var(--ink) 7px, var(--ink) 8px, transparent 8px, transparent 10px);
+    border-right:1px solid var(--ink);
+  }
+  .specimen-label .fields{display:flex;flex:1;flex-wrap:wrap;}
+  .specimen-label .field{padding:7px 12px;border-right:1px solid var(--line);flex:1;min-width:120px;}
+  .specimen-label .field:last-child{border-right:none;}
+  .specimen-label .field .k{color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.06em;font-size:8.5px;}
+  .specimen-label .field .v{color:var(--ink);font-weight:700;margin-top:2px;}
+
+  /* ---------------- header ---------------- */
+  header.top{
+    display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:20px;
+    padding-bottom:20px;margin-bottom:26px;border-bottom:2px solid var(--ink);
+  }
+  .eyebrow-main{
+    font-family:var(--sans);font-size:10px;letter-spacing:0.24em;text-transform:uppercase;
+    color:var(--rust-dark);margin-bottom:9px;font-weight:700;
+  }
+  h1{
+    font-weight:400;font-style:normal;font-size:36px;margin:0 0 8px;color:var(--ink);letter-spacing:0;
+  }
+  h1 em{color:var(--moss);font-style:italic;}
+  .subtitle{color:var(--ink-dim);font-size:13.5px;max-width:620px;line-height:1.7;font-style:italic;}
+  .credit{font-size:11px;color:var(--ink-faint);text-align:right;line-height:1.85;font-family:var(--sans);}
+  .credit b{color:var(--ink-dim);font-weight:700;}
+
+  /* ---------------- layout ---------------- */
+  .grid{display:grid;grid-template-columns:260px 1fr 300px;gap:20px;align-items:start;}
+  @media (max-width:1100px){ .grid{grid-template-columns:1fr;} }
+  .flexcol{display:flex;flex-direction:column;gap:20px;}
+
+  .panel{
+    background:var(--card);
+    border:1px solid var(--line);border-radius:2px;
+    padding:18px;
+    box-shadow:0 1px 0 rgba(44,38,24,0.04), 0 6px 14px rgba(44,38,24,0.05);
+  }
+  .panel + .panel{margin-top:20px;}
+
+  .eyebrow{
+    font-family:var(--sans);font-size:10.5px;text-transform:uppercase;letter-spacing:0.11em;color:var(--ink-dim);
+    padding-bottom:9px;margin-bottom:14px;border-bottom:1px solid var(--line-soft);
+    display:flex;justify-content:space-between;align-items:baseline;font-weight:700;
+  }
+  .eyebrow .tag{font-style:italic;font-family:var(--serif);font-size:12px;text-transform:none;letter-spacing:0;color:var(--ink-faint);font-weight:400;}
+
+  .row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:13px 0;}
+  .row label{font-size:11px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:0.06em;font-family:var(--sans);}
+  .row .val{font-size:14px;color:var(--rust-dark);font-weight:700;min-width:24px;text-align:right;font-family:var(--serif);}
+
+  input[type=range]{-webkit-appearance:none;width:100%;height:2px;background:var(--line);border-radius:2px;outline:none;}
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:13px;height:13px;border-radius:50%;
+    background:var(--card); border:2px solid var(--moss); cursor:pointer;
+  }
+  input[type=range]::-moz-range-thumb{width:11px;height:11px;border-radius:50%;background:var(--card);border:2px solid var(--moss);cursor:pointer;}
+
+  select{
+    background:var(--card-2);color:var(--ink);border:1px solid var(--line);
+    font-family:var(--sans);font-size:11.5px;padding:6px 8px;border-radius:2px;width:100%;
+  }
+
+  button{
+    font-family:var(--sans);font-weight:700;font-size:11px;padding:9px 12px;border-radius:2px;
+    border:1px solid var(--ink);background:var(--card);color:var(--ink);cursor:pointer;
+    transition:all .12s ease;letter-spacing:0.03em;text-transform:uppercase;
+  }
+  button:hover{background:var(--ink);color:var(--card);}
+  button:active{transform:translateY(1px);}
+  button.primary{background:var(--moss);color:#f4f7ef;border-color:var(--moss-dark);}
+  button.primary:hover{background:var(--moss-dark);color:#f4f7ef;}
+  button.on{background:var(--rust);color:#fbf1e8;border-color:var(--rust-dark);}
+  .btnrow{display:flex;gap:7px;flex-wrap:wrap;margin-top:13px;}
+  .btnrow button{flex:1;min-width:70px;}
+
+  .schemes{display:flex;flex-direction:column;gap:7px;}
+  .scheme-btn{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:10px 12px;border:1px solid var(--line);border-radius:2px;background:var(--card-2);
+    cursor:pointer;transition:all .12s ease;
+  }
+  .scheme-btn:hover{border-color:var(--ink-dim);}
+  .scheme-btn .name{font-family:var(--serif);font-size:14.5px;color:var(--ink);}
+  .scheme-btn .desc{font-size:9px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.05em;font-family:var(--sans);}
+  .scheme-btn.active{border-color:var(--moss);background:var(--moss-pale);}
+  .scheme-btn.active .name{color:var(--moss-dark);}
+  .scheme-btn.active .desc{color:var(--moss-dark);}
+
+  .hint{font-size:11px;color:var(--ink-faint);line-height:1.65;margin-top:9px;}
+  .hint b{color:var(--ink-dim);}
+
+  /* ---------------- specimen plate ---------------- */
+  .plate{
+    position:relative;border:1px solid var(--ink);padding:10px;background:var(--card-2);
+  }
+  .plate .inner-frame{border:1px solid var(--line);padding:6px;}
+  .plate canvas{display:block;width:100%;background:var(--card);}
+  .caption{
+    font-style:italic;font-size:11.5px;color:var(--ink-dim);text-align:center;
+    padding-top:10px;margin-top:10px;border-top:1px solid var(--line-soft);
+  }
+  .caption b{font-style:normal;color:var(--ink);}
+
+  .legend{display:flex;gap:16px;margin-top:12px;font-size:10.5px;color:var(--ink-faint);flex-wrap:wrap;font-family:var(--sans);justify-content:center;}
+  .legend .sw{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px;border:1px solid rgba(44,38,24,0.3);}
+
+  .kymo-wrap{overflow-x:auto;overflow-y:hidden;}
+
+  .fate-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+  .fate-cell{border:1px solid var(--ink);background:var(--card-2);padding:6px;text-align:center;}
+  .fate-cell canvas{width:100%;height:auto;display:block;background:#8a8a8a;}
+  .fate-cell .fate-label{font-family:var(--mono);font-size:9.5px;color:var(--ink-dim);margin-top:5px;}
+
+  .readout{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:4px;}
+  .cell{background:var(--card-2);border:1px solid var(--line-soft);border-radius:2px;padding:10px 12px;}
+  .cell .k{font-size:9px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;font-family:var(--sans);}
+  .cell .v{font-size:18px;color:var(--rust-dark);font-weight:700;margin-top:4px;}
+  .cell .v.small{font-size:13px;word-break:break-all;font-family:var(--mono);font-weight:400;color:var(--ink);}
+
+  .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:9.5px;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;font-family:var(--sans);border:1px solid transparent;}
+  .badge.point{background:var(--moss-pale);color:var(--moss-dark);border-color:var(--moss);}
+  .badge.cycle{background:#efe0bd;color:#7a5a1e;border-color:#c69a4a;}
+  .badge.none{background:var(--card-2);color:var(--ink-faint);border-color:var(--line);}
+  .badge.loose{background:#ecd6dd;color:var(--plum);border-color:var(--plum);}
+
+  table.rules{width:100%;border-collapse:collapse;font-size:11px;margin-top:10px;font-family:var(--mono);}
+  table.rules th, table.rules td{border-bottom:1px solid var(--line-soft);padding:4px 6px;text-align:left;color:var(--ink-dim);}
+  table.rules th{color:var(--ink-faint);text-transform:uppercase;font-size:8.5px;letter-spacing:0.05em;font-family:var(--sans);}
+  .rules-box{max-height:220px;overflow-y:auto;}
+
+  .foot{
+    margin-top:34px;border-top:2px solid var(--ink);padding-top:18px;
+    display:flex;justify-content:space-between;gap:26px;flex-wrap:wrap;color:var(--ink-faint);font-size:11px;line-height:1.8;
+  }
+  .foot b{color:var(--ink-dim);}
+  a{color:var(--moss-dark);}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="specimen-label">
+    <div class="barcode"></div>
+    <div class="fields">
+      <div class="field"><div class="k">Specimen ID</div><div class="v" id="specId">—</div></div>
+      <div class="field"><div class="k">Accessioned</div><div class="v" id="specDate">—</div></div>
+      <div class="field"><div class="k">Preparation</div><div class="v">GFP reporter, live-cell</div></div>
+      <div class="field"><div class="k">Investigator</div><div class="v">RBN Laboratory</div></div>
+    </div>
+  </div>
+
+  <header class="top">
+    <div>
+      <div class="eyebrow-main">Field Notebook · Discrete Dynamical Systems</div>
+      <h1>Regulatory Network <em>Notebook</em></h1>
+      <div class="subtitle">A working specimen of a genetic regulatory network, modelled as a Random Boolean Network — each gene reads the expression of k regulators, combined through l-way hyperedges, and switches according to a randomly assigned rule. Observe how synchronous, asynchronous, and stochastic update regimes reshape the same wiring (Gershenson, 2002), probe order, chaos, and the critical edge (Gershenson, 2004), and see how higher-order interactions among regulators reshape attractor dynamics (Stoltz &amp; Joslyn, 2024) — all built on Kauffman's (1969, 1993) model of cell differentiation.</div>
+    </div>
+    <div class="credit">
+      <div><b>Classification</b> — Gershenson, C., <i>Classification of Random Boolean Networks</i> (2002)</div>
+      <div><b>Theory</b> — Gershenson, C., <i>Introduction to Random Boolean Networks</i> (2004)</div>
+      <div><b>Higher-order</b> — Stoltz, K. &amp; Joslyn, C., <i>Dynamical Properties of Random Boolean Hypernetworks</i> (2024)</div>
+      <div><b>Foundation</b> — Kauffman, S. A., <i>The Origins of Order</i> (1993)</div>
+      <div><b>Runtime</b> — self-contained, offline, no dependencies</div>
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- ============ LEFT ============ -->
+    <div class="flexcol">
+      <div class="panel">
+        <div class="eyebrow">Construction <span class="tag">n, k, p</span></div>
+        <div class="row"><label>Genes (n)</label><span class="val" id="nVal">8</span></div>
+        <input type="range" id="nSlider" min="2" max="12" value="8">
+        <div class="row"><label>Regulators (k)</label><span class="val" id="kVal">3</span></div>
+        <input type="range" id="kSlider" min="0" max="6" value="3">
+        <div class="row"><label>Rule bias (p)</label><span class="val" id="pVal">0.50</span></div>
+        <input type="range" id="pSlider" min="0" max="100" value="50">
+        <div class="row"><label>Hyperedge order (l)</label><span class="val" id="lVal">1</span></div>
+        <input type="range" id="lSlider" min="1" max="4" value="1">
+        <div class="row"><label>Wiring</label>
+          <select id="topologySelect" style="width:150px;">
+            <option value="homogeneous" selected>Homogeneous (uniform)</option>
+            <option value="scalefree">Preferential attachment</option>
+          </select>
+        </div>
+        <div class="hint">Every gene is wired through k regulatory hyperedges, each combining l regulator genes via a random Boolean function before feeding the gene's own rule — the higher-order construction of Stoltz &amp; Joslyn (2024), which reduces to the classical Kauffman N‑K‑p model at l=1. Preferential-attachment wiring produces a few heavily-regulating hub genes, echoing the scale-free topologies observed in real regulatory networks (Gershenson, 2004).</div>
+        <div class="btnrow">
+          <button class="primary" id="btnNewNet">Rewire specimen</button>
+          <button id="btnNewState">New expression state</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="eyebrow">Update regime <span class="tag">Table 1</span></div>
+        <div class="schemes" id="schemeList"></div>
+        <div class="hint" id="schemeHint">—</div>
+      </div>
+
+      <div class="panel">
+        <div class="eyebrow">Firing clock <span class="tag">p, q</span></div>
+        <div class="hint">Used by <b>DARBN</b> and <b>DGARBN</b>. Gene i fires only when t mod p<sub>i</sub> = q<sub>i</sub> — a deterministic rhythm in place of pure chance.</div>
+        <div class="btnrow"><button id="btnRandPQ">Reassign clocks</button></div>
+        <div class="rules-box" id="pqTable"></div>
+      </div>
+
+      <div class="panel">
+        <div class="eyebrow">Order, chaos &amp; the edge <span class="tag">Derrida, 1986</span></div>
+        <div class="readout">
+          <div class="cell"><div class="k">Lyapunov λ</div><div class="v small" id="roLambda">—</div></div>
+          <div class="cell"><div class="k">Regime</div><div class="v small" id="roPhase">—</div></div>
+          <div class="cell" style="grid-column:1/3;"><div class="k">Critical connectivity ⟨K⟩꜀ = 1 / 2p(1−p)</div><div class="v small" id="roKc">—</div></div>
+        </div>
+        <div class="hint">λ = log[2p(1−p)k]. λ&lt;0 is the <b>ordered</b> phase (perturbations die out), λ&gt;0 is <b>chaotic</b> (they percolate), λ≈0 sits at the <b>critical</b> edge — the regime most associated with living systems (Langton 1990; Kauffman 2000).</div>
+      </div>
+    </div>
+
+    <!-- ============ CENTER ============ -->
+    <div class="flexcol">
+      <div class="panel">
+        <div class="eyebrow">Living tissue <span class="tag">specimen plate</span></div>
+        <div class="plate"><div class="inner-frame">
+          <canvas id="graphCanvas" height="380"></canvas>
+        </div></div>
+        <div class="caption" id="graphCaption">Fig. 1 — Live fluorescence, GFP reporter / DAPI. <b>N=8, K=3, L=1</b>, running under the <b>CRBN</b> regime.</div>
+        <div class="legend">
+          <span><span class="sw" style="background:#3ad084;"></span>expressed — GFP-positive</span>
+          <span><span class="sw" style="background:#1e2a2e"></span>silent — unlabelled</span>
+          <span><span class="sw" style="background:#4060e0"></span>nucleus — DAPI</span>
+          <span><span class="sw" style="background:none;border:1.5px dashed var(--rust);"></span>just switched</span>
+          <span><span class="sw" style="background:none;border-radius:0;border-top:2px solid #ffb040;width:10px;height:0;margin-top:5px;"></span>signalling thread</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="eyebrow">Expression record <span class="tag">autoradiograph</span></div>
+        <div class="plate"><div class="inner-frame">
+          <div class="kymo-wrap"><canvas id="tapeCanvas" height="190"></canvas></div>
+        </div></div>
+        <div class="caption">Fig. 2 — One lane per gene, one exposure per time step; dark bands mark expression, as on a developed blot.</div>
+        <div class="btnrow">
+          <button class="primary" id="btnPlay">▶ Run</button>
+          <button id="btnStep">Step »</button>
+          <button id="btnResetT">Reset clock</button>
+        </div>
+        <div class="row" style="margin-top:14px;"><label>Speed</label><span class="val" id="speedVal">6</span></div>
+        <input type="range" id="speedSlider" min="1" max="20" value="6">
+      </div>
+
+      <div class="panel">
+        <div class="eyebrow">Damage spreading <span class="tag">twin specimen</span></div>
+        <div class="hint">A second, "damaged" specimen is cloned from the current pattern with one gene flipped, then run alongside the original under the same firing decisions each tick — Harvey &amp; Bossomaier's method for testing whether a network sits in the ordered or chaotic regime. Watch whether the gap closes (ordered) or grows (chaotic).</div>
+        <div class="btnrow"><button class="primary" id="btnPerturb">Flip one gene &amp; trace</button><button id="btnStopTwin">Clear trace</button></div>
+        <div class="plate" style="margin-top:12px;"><div class="inner-frame">
+          <canvas id="damageCanvas" height="170"></canvas>
+        </div></div>
+        <div class="caption" id="damageCaption">Fig. 4 — Normalized Hamming distance between original and damaged specimen vs. time.</div>
+      </div>
+
+      <div class="panel">
+        <div class="eyebrow">Derrida plot <span class="tag">order · chaos, empirically</span></div>
+        <div class="hint">Samples many pairs of states at each starting Hamming distance H₀, applies one synchronous step to both, and plots the resulting distance H₁. Below the diagonal, perturbations shrink — the <b>ordered</b> regime; above it, they grow — <b>chaotic</b>. This is the Derrida &amp; Pomeau (1986) diagnostic, measured directly on this specimen rather than assumed from k and p alone.</div>
+        <div class="btnrow"><button class="primary" id="btnDerrida">Sample Derrida plot</button></div>
+        <div class="plate" style="margin-top:12px;"><div class="inner-frame">
+          <canvas id="derridaCanvas" height="200"></canvas>
+        </div></div>
+        <div class="caption">H₀ (initial distance) vs. mean H₁ (distance after one step). Dashed line is H₁=H₀.</div>
+      </div>
+
+      <div class="panel">
+        <div class="eyebrow">Cell fate map <span class="tag">multistability</span></div>
+        <div class="hint">The same genome — identical wiring and rules — started from four different random expression patterns and run to their attractors under CRBN. Kauffman's central claim: a genome's <b>cell types</b> are simply its distinct attractors, reached from different starting conditions, not different genomes.</div>
+        <div class="btnrow"><button class="primary" id="btnGrowFates">Grow four cell fates</button></div>
+        <div class="fate-grid" id="fateGrid"></div>
+      </div>
+
+      <div class="panel">
+        <div class="eyebrow">Attractor statistics <span class="tag">Figs. 3–4, reproduced live</span></div>
+        <div class="hint">Samples random networks at a fixed k across a range of n, runs every regime from a random state, and plots the average recurrence period found (capped). Should echo the paper's core finding: <b>determinism</b>, not synchronicity, is what separates the regimes.</div>
+        <div class="row"><label>Fixed k for sweep</label>
+          <select id="expK" style="width:74px;"><option>1</option><option selected>2</option><option>3</option><option>4</option></select>
+        </div>
+        <div class="row"><label>Trials per point</label>
+          <select id="expTrials" style="width:94px;"><option>15</option><option selected>30</option><option>60</option></select>
+        </div>
+        <div class="btnrow"><button class="primary" id="btnRunExp">Run experiment</button></div>
+        <div class="plate" style="margin-top:12px;"><div class="inner-frame">
+          <canvas id="expCanvas" height="210"></canvas>
+        </div></div>
+        <div class="caption">Fig. 3 — Average recurrence period vs. n, by regime.</div>
+        <div class="legend" id="expLegend"></div>
+      </div>
+    </div>
+
+    <!-- ============ RIGHT ============ -->
+    <div class="flexcol">
+      <div class="panel">
+        <div class="eyebrow">Field readings <span class="tag">live</span></div>
+        <div class="readout">
+          <div class="cell"><div class="k">Time</div><div class="v" id="roT">0</div></div>
+          <div class="cell"><div class="k">Regime</div><div class="v small" id="roScheme">CRBN</div></div>
+          <div class="cell" style="grid-column:1/3;"><div class="k">Expression pattern</div><div class="v small" id="roState">—</div></div>
+          <div class="cell"><div class="k">Fixed point?</div><div class="v small" id="roFixed">—</div></div>
+          <div class="cell"><div class="k">Recurrence</div><div class="v small" id="roCycle">—</div></div>
+          <div class="cell" style="grid-column:1/3;"><div class="k">Period</div><div class="v small" id="roPeriod">—</div></div>
+          <div class="cell" style="grid-column:1/3;"><div class="k">Network complexity C = 4Ē(1−Ē)</div><div class="v small" id="roComplexity">—</div></div>
+        </div>
+        <div class="hint">Gershenson's central result: a <b>point attractor</b> — a state where no gene's regulators would change its output — is identical no matter which update regime governs the network. Cycle and loose attractors depend on it.</div>
+      </div>
+
+      <div class="panel">
+        <div class="eyebrow">Regulatory logic <span class="tag">wiring + rules</span></div>
+        <div class="rules-box" id="ruleTables"></div>
+      </div>
+
+      <div class="panel">
+        <div class="eyebrow">Exhaustive census <span class="tag">CRBN, this specimen</span></div>
+        <div class="hint">Walks all 2<sup>n</sup> possible expression patterns of the current specimen under <b>synchronous</b> updating, follows each to its attractor, and tallies the exact — not sampled — census: attractor count, average cycle length, and the fraction of states with no predecessor (<b>garden-of-Eden</b> states, after Wuensche).</div>
+        <div class="btnrow"><button class="primary" id="btnCensus">Run exhaustive census</button></div>
+        <div class="readout" id="censusReadout" style="margin-top:10px;"></div>
+        <canvas id="censusHistCanvas" height="90" style="margin-top:10px;"></canvas>
+        <div class="hint" id="censusHistCaption" style="text-align:center;"></div>
+      </div>
+
+      <div class="panel">
+        <div class="eyebrow">Specimen archive <span class="tag">save / load / export</span></div>
+        <div class="hint">Save this exact specimen — every gene's wiring, rule table, hyperedges, and clock — to a file, or load one back in. Export the current tissue plate as a PNG for a lab notebook or slide deck.</div>
+        <div class="btnrow">
+          <button id="btnExportSpecimen">Save specimen (.json)</button>
+          <button id="btnImportSpecimen">Load specimen</button>
+        </div>
+        <input type="file" id="importFile" accept="application/json" style="display:none;">
+        <div class="btnrow"><button id="btnExportPNG">Export tissue plate (.png)</button></div>
+      </div>
+
+      <div class="panel">
+        <div class="eyebrow">Taxonomy <span class="tag">Table 1</span></div>
+        <table class="rules">
+          <tr><th>Network</th><th>Timing</th><th>Rule</th></tr>
+          <tr><td>CRBN</td><td>synchronous</td><td>deterministic</td></tr>
+          <tr><td>ARBN</td><td>asynchronous</td><td>non‑deterministic</td></tr>
+          <tr><td>DARBN</td><td>asynchronous</td><td>deterministic</td></tr>
+          <tr><td>GARBN</td><td>semi‑synchronous</td><td>non‑deterministic</td></tr>
+          <tr><td>DGARBN</td><td>semi‑synchronous</td><td>deterministic</td></tr>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="foot">
+    <div style="max-width:660px;">
+      <b>About this notebook.</b> A from-scratch, self-contained reconstruction of the five network types defined in Gershenson (2002) — CRBN, ARBN (Harvey &amp; Bossomaier 1997), DARBN, GARBN, and DGARBN — built for exploration and teaching, not a copy of the author's original Java applet.
+    </div>
+    <div style="max-width:420px;">
+      <b>Further reading.</b> Harvey &amp; Bossomaier (1997) <i>Time Out of Joint</i>; Di Paolo (2001) <i>Rhythmic and Non-rhythmic Attractors in ARBNs</i>; Kauffman (1993) <i>The Origins of Order</i>.
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ================================================================
+  // MODEL STATE
+  // ================================================================
+  let n = 8, k = 3;
+  let inputs = [], rules = [], p = [], q = [];
+  let hyperedges = []; // hyperedges[i] = array of k hyperedge objs {inputs:[genes], table, curveIn:[...], curveOut}
+  let hyperOrder = 1; // l — inputs per hyperedge (Stoltz & Joslyn 2024)
+  let state = [], lastUpdated = [];
+  let pulses = []; // {node, start}
+  let t = 0, history = [];
+  let scheme = "CRBN";
+  let running = false, timer = null, speed = 6;
+  let positions = []; // {x,y} in unit space [0,1]
+  let nodeSeed = [];
+  let biasP = 0.5;           // rule bias, P(output=1)
+  let topology = "homogeneous"; // "homogeneous" | "scalefree"
+  let twinState = null, twinActive = false, twinHistory = []; // damage-spreading trace
+  const GRID_W = 260, GRID_H = 140;
+  let regionIndex = null, regionDist = null, regionMembrane = null;
+  let cellRadius = 20;
+  const heightBuf = new Float32Array(GRID_W*GRID_H);
+  const offCanvas = document.createElement("canvas");
+  offCanvas.width = GRID_W; offCanvas.height = GRID_H;
+  const offCtx = offCanvas.getContext("2d");
+  const offImg = offCtx.createImageData(GRID_W, GRID_H);
+
+  const SCHEMES = [
+    {id:"CRBN",  name:"CRBN",   desc:"Synchronous · Deterministic"},
+    {id:"ARBN",  name:"ARBN",   desc:"Asynchronous · Non-deterministic"},
+    {id:"DARBN", name:"DARBN",  desc:"Asynchronous · Deterministic"},
+    {id:"GARBN", name:"GARBN",  desc:"Semi-sync · Non-deterministic"},
+    {id:"DGARBN",name:"DGARBN", desc:"Semi-sync · Deterministic"}
+  ];
+  const SCHEME_HINTS = {
+    CRBN:"All n genes update at once, every tick, from the state at t. Kauffman's original model — supports both point and cycle attractors.",
+    ARBN:"One gene, chosen uniformly at random, fires per tick. No cycle attractors are possible here — only point and 'loose' attractors (Harvey & Bossomaier, 1997).",
+    DARBN:"Each gene fires on its own fixed clock (t mod p = q); simultaneous ties resolve in index order, each seeing the freshest state. Deterministic ⇒ true cycle attractors exist.",
+    GARBN:"An independently-random subset of genes fires synchronously each tick — anywhere from nobody to everybody. Non-deterministic ⇒ point/loose attractors only.",
+    DGARBN:"Like GARBN, but the firing subset is fixed by each gene's (p, q) clock, so simultaneous firings apply synchronously. Deterministic ⇒ true cycle attractors exist."
+  };
+  const SCHEME_COLOR = {CRBN:"#2c2618", ARBN:"#79475f", DARBN:"#a8792f", GARBN:"#57647d", DGARBN:"#59774a"};
+
+  function randInt(m){ return Math.floor(Math.random()*m); }
+
+  // ================================================================
+  // NETWORK GENERATION
+  // ================================================================
+  function generateNetwork(){
+    inputs = []; rules = []; nodeSeed = []; hyperedges = [];
+    const weight = new Array(n).fill(1); // preferential-attachment weights
+    function pickSrc(){
+      if(topology==="scalefree"){
+        let total=0; for(let s=0;s<n;s++) total+=weight[s];
+        let r=Math.random()*total, acc=0, src=n-1;
+        for(let s=0;s<n;s++){ acc+=weight[s]; if(r<=acc){ src=s; break; } }
+        weight[src]+=1.2;
+        return src;
+      }
+      return randInt(n);
+    }
+    for(let i=0;i<n;i++){
+      const flatIns=[]; const hes=[];
+      for(let j=0;j<k;j++){
+        const l = hyperOrder;
+        const heIns=[]; for(let m=0;m<l;m++){ const s=pickSrc(); heIns.push(s); flatIns.push(s); }
+        let table;
+        if(l===1){ table = new Uint8Array([0,1]); } // identity — a plain hypernetwork of order 1 recovers the classical RBN (Stoltz & Joslyn, 2024)
+        else { table = new Uint8Array(1<<l); for(let x=0;x<table.length;x++) table[x]=Math.random()<0.5?1:0; }
+        const curveIn = heIns.map(()=> (Math.random()-0.5)*0.7);
+        hes.push({ inputs: heIns, table, curveIn, curveOut:(Math.random()-0.5)*0.7 });
+      }
+      inputs.push(flatIns);
+      hyperedges.push(hes);
+      const size=1<<k; const tbl=new Uint8Array(size);
+      for(let x=0;x<size;x++) tbl[x]=Math.random()<biasP?1:0;
+      rules.push(tbl);
+      nodeSeed.push(Math.random()*10);
+    }
+    generatePQ();
+    layoutForce();
+    buildRegionMap();
+    randomizeState();
+    renderRuleTables();
+    updatePhaseReadout();
+  }
+
+  // ================================================================
+  // TISSUE REGION MAP — dense raster Voronoi tessellation of the specimen.
+  // The n genes are only a few of the many small cells shown; hundreds of
+  // unlabelled "filler" cells pack the field between them and inherit the
+  // colour of their nearest gene, so the plate reads as an actual dense
+  // histology section rather than a handful of giant balloons.
+  // ================================================================
+  const FILLER_COUNT = 240;
+  let siteX = [], siteY = [], siteOwner = [], siteNucOffX = [], siteNucOffY = [], siteBright = [];
+  let totalSites = 0;
+
+  function buildRegionMap(){
+    siteX = []; siteY = []; siteOwner = []; siteNucOffX = []; siteNucOffY = []; siteBright = [];
+    // the n gene sites come first, each owning itself
+    for(let i=0;i<n;i++){
+      siteX.push(positions[i].x*GRID_W);
+      siteY.push(positions[i].y*GRID_H);
+      siteOwner.push(i);
+    }
+    // scatter filler sites, each adopting the nearest gene's colour/state
+    for(let f=0; f<FILLER_COUNT; f++){
+      const x = (0.03+Math.random()*0.94)*GRID_W;
+      const y = (0.04+Math.random()*0.92)*GRID_H;
+      let best=0, bestD=Infinity;
+      for(let i=0;i<n;i++){
+        const dx=x-siteX[i], dy=y-siteY[i], d=dx*dx+dy*dy;
+        if(d<bestD){ bestD=d; best=i; }
+      }
+      siteX.push(x); siteY.push(y); siteOwner.push(best);
+    }
+    totalSites = siteX.length;
+    for(let s=0;s<totalSites;s++){
+      siteNucOffX.push((Math.random()-0.5)*0.55);
+      siteNucOffY.push((Math.random()-0.5)*0.55);
+      siteBright.push(0.86+Math.random()*0.30); // natural cell-to-cell colour variation
+    }
+    cellRadius = 0.60*Math.sqrt((GRID_W*GRID_H)/totalSites);
+
+    regionIndex = new Uint16Array(GRID_W*GRID_H);
+    regionDist = new Float32Array(GRID_W*GRID_H);
+    regionMembrane = new Float32Array(GRID_W*GRID_H);
+    for(let gy=0; gy<GRID_H; gy++){
+      for(let gx=0; gx<GRID_W; gx++){
+        let d1=Infinity, d2=Infinity, i1=0;
+        for(let s=0;s<totalSites;s++){
+          const dx=gx-siteX[s], dy=gy-siteY[s];
+          const d=dx*dx+dy*dy;
+          if(d<d1){ d2=d1; d1=d; i1=s; } else if(d<d2){ d2=d; }
+        }
+        const idx = gy*GRID_W+gx;
+        regionIndex[idx]=i1;
+        regionDist[idx]=Math.sqrt(d1);
+        const ratio = d2>0 ? Math.sqrt(d1)/Math.sqrt(d2) : 0;
+        regionMembrane[idx] = ratio>0.90 ? Math.min(1,(ratio-0.90)/0.10) : 0;
+      }
+    }
+  }
+
+  function generatePQ(){
+    p=[]; q=[];
+    for(let i=0;i<n;i++){ p.push(1+randInt(4)); q.push(0); }
+    renderPQ();
+  }
+
+  function randomizeState(){
+    state=[]; for(let i=0;i<n;i++) state.push(Math.random()<0.5?1:0);
+    lastUpdated = new Array(n).fill(false);
+    pulses = [];
+    twinActive = false; twinState = null; twinHistory = [];
+    t=0; history=[state.join("")];
+    updateReadout();
+    drawTape();
+    drawDamageChart();
+  }
+
+  function computeNext(i, src){
+    let idx=0;
+    const hes = hyperedges[i];
+    for(let j=0;j<hes.length;j++){
+      const he = hes[j];
+      let hv;
+      if(he.inputs.length===1){ hv = src[he.inputs[0]]; }
+      else { let hidx=0; for(let m=0;m<he.inputs.length;m++) hidx=(hidx<<1)|src[he.inputs[m]]; hv = he.table[hidx]; }
+      idx = (idx<<1)|hv;
+    }
+    return rules[i][idx];
+  }
+  function isFixedPoint(src){
+    for(let i=0;i<n;i++) if(computeNext(i,src)!==src[i]) return false;
+    return true;
+  }
+
+  // ================================================================
+  // FORCE-DIRECTED LAYOUT (organic wiring diagram)
+  // ================================================================
+  function layoutForce(){
+    const pos = [];
+    for(let i=0;i<n;i++){
+      const ang = Math.random()*Math.PI*2;
+      const r = 0.15+Math.random()*0.25;
+      pos.push({x:0.5+r*Math.cos(ang), y:0.5+r*Math.sin(ang)});
+    }
+    const edges = [];
+    for(let i=0;i<n;i++) inputs[i].forEach(s=>{ if(s!==i) edges.push([s,i]); });
+
+    for(let iter=0; iter<260; iter++){
+      const disp = pos.map(()=>({x:0,y:0}));
+      for(let i=0;i<n;i++){
+        for(let j2=i+1;j2<n;j2++){
+          let dx=pos[i].x-pos[j2].x, dy=pos[i].y-pos[j2].y;
+          let d2 = dx*dx+dy*dy; if(d2<0.0001) d2=0.0001;
+          const d = Math.sqrt(d2);
+          const force = 0.0026/d2;
+          dx/=d; dy/=d;
+          disp[i].x += dx*force; disp[i].y += dy*force;
+          disp[j2].x -= dx*force; disp[j2].y -= dy*force;
+        }
+      }
+      edges.forEach(([a,b])=>{
+        let dx=pos[a].x-pos[b].x, dy=pos[a].y-pos[b].y;
+        const d = Math.sqrt(dx*dx+dy*dy)||0.0001;
+        const rest = 0.30;
+        const force = (d-rest)*0.06;
+        dx/=d; dy/=d;
+        disp[a].x -= dx*force; disp[a].y -= dy*force;
+        disp[b].x += dx*force; disp[b].y += dy*force;
+      });
+      for(let i=0;i<n;i++){
+        disp[i].x += (0.5-pos[i].x)*0.012;
+        disp[i].y += (0.5-pos[i].y)*0.012;
+        pos[i].x += Math.max(-0.05,Math.min(0.05,disp[i].x));
+        pos[i].y += Math.max(-0.05,Math.min(0.05,disp[i].y));
+        pos[i].x = Math.max(0.10,Math.min(0.90,pos[i].x));
+        pos[i].y = Math.max(0.12,Math.min(0.88,pos[i].y));
+      }
+    }
+    positions = pos;
+  }
+
+  // ================================================================
+  // STEP FUNCTIONS — a shared "firing decision" is drawn once per tick
+  // and applied identically to the main specimen and (if active) its
+  // damaged twin, so the two trajectories differ only because of the
+  // original perturbation (Harvey & Bossomaier's damage-spreading test).
+  // ================================================================
+  function registerPulses(flags){
+    const now = performance.now();
+    for(let i=0;i<n;i++) if(flags[i]) pulses.push({node:i, start:now});
+  }
+
+  function decideFiring(tt){
+    if(scheme==="CRBN") return {type:"all"};
+    if(scheme==="ARBN") return {type:"single", i:randInt(n)};
+    if(scheme==="DARBN" || scheme==="DGARBN"){
+      const list=[]; for(let i=0;i<n;i++) if(((tt%p[i])+p[i])%p[i]===q[i]) list.push(i);
+      return {type: scheme==="DARBN" ? "sequential" : "synchronous", list};
+    }
+    if(scheme==="GARBN"){
+      const list=[]; for(let i=0;i<n;i++) if(Math.random()<0.5) list.push(i);
+      return {type:"synchronous", list};
+    }
+  }
+
+  // applies a firing decision to an arbitrary state array, returns the new array
+  function applyFiring(arr, decision){
+    if(decision.type==="all"){
+      const base=arr.slice();
+      return base.map((_,i)=>computeNext(i,base));
+    }
+    if(decision.type==="single"){
+      const next=arr.slice();
+      next[decision.i]=computeNext(decision.i, arr);
+      return next;
+    }
+    if(decision.type==="sequential"){
+      const next=arr.slice();
+      decision.list.forEach(i=>{ next[i]=computeNext(i, next); });
+      return next;
+    }
+    if(decision.type==="synchronous"){
+      const base=arr.slice(); const next=base.slice();
+      decision.list.forEach(i=>{ next[i]=computeNext(i, base); });
+      return next;
+    }
+    return arr.slice();
+  }
+
+  function stepOnce(){
+    const decision = decideFiring(t);
+    const before = state.slice();
+    state = applyFiring(state, decision);
+    lastUpdated = state.map((v,i)=>v!==before[i]);
+    registerPulses(lastUpdated);
+
+    if(twinActive && twinState){
+      twinState = applyFiring(twinState, decision);
+      const hd = hammingDistance(state, twinState) / n;
+      twinHistory.push(hd);
+      if(twinHistory.length>240) twinHistory.shift();
+    }
+
+    t++;
+    history.push(state.join(""));
+    if(history.length>4000) history.shift();
+    updateReadout();
+    drawTape();
+    drawDamageChart();
+  }
+
+  function hammingDistance(a,b){
+    let d=0; for(let i=0;i<a.length;i++) if(a[i]!==b[i]) d++;
+    return d;
+  }
+
+  // ================================================================
+  // READOUT
+  // ================================================================
+  function findRecurrence(){
+    const cur=history[history.length-1];
+    for(let j=history.length-2;j>=0;j--) if(history[j]===cur) return history.length-1-j;
+    return null;
+  }
+  function updateReadout(){
+    document.getElementById("roT").textContent=t;
+    document.getElementById("roScheme").textContent=scheme;
+    document.getElementById("roState").textContent=state.join("");
+    document.getElementById("graphCaption").innerHTML = `Fig. 1 — Live fluorescence, GFP reporter / DAPI. <b>N=${n}, K=${k}, L=${hyperOrder}</b>, running under the <b>${scheme}</b> regime (t=${t}).`;
+    const fixed=isFixedPoint(state);
+    document.getElementById("roFixed").innerHTML = fixed
+      ? '<span class="badge point">yes — point attractor</span>'
+      : '<span class="badge none">no</span>';
+    const period=findRecurrence();
+    const detTrue=(scheme==="CRBN"||scheme==="DARBN"||scheme==="DGARBN");
+    if(period===null){
+      document.getElementById("roCycle").innerHTML='<span class="badge none">none yet</span>';
+      document.getElementById("roPeriod").textContent="—";
+    } else if(period===1||fixed){
+      document.getElementById("roCycle").innerHTML='<span class="badge point">point</span>';
+      document.getElementById("roPeriod").textContent="1";
+    } else {
+      document.getElementById("roCycle").innerHTML = detTrue
+        ? '<span class="badge cycle">cycle</span>'
+        : '<span class="badge loose">loose recurrence</span>';
+      document.getElementById("roPeriod").textContent=period;
+    }
+    document.getElementById("roComplexity").textContent = computeComplexity();
+  }
+
+  function computeComplexity(){
+    if(history.length<3) return "— (run longer)";
+    let sumE=0;
+    for(let i=0;i<n;i++){
+      let ones=0;
+      for(let s=0;s<history.length;s++) if(history[s][i]==="1") ones++;
+      const p1=ones/history.length, p0=1-p1;
+      const e = -((p0>0?p0*Math.log2(p0):0) + (p1>0?p1*Math.log2(p1):0));
+      sumE+=e;
+    }
+    const Ebar = sumE/n;
+    return (4*Ebar*(1-Ebar)).toFixed(3);
+  }
+
+  // ================================================================
+  // GRAPH — ink-and-paper illustration rendering, continuous rAF loop
+  // ================================================================
+  const gCanvas=document.getElementById("graphCanvas");
+
+  function fitCanvas(canvas){
+    const ratio=window.devicePixelRatio||1;
+    const w=canvas.clientWidth, h=parseInt(canvas.getAttribute("height"),10);
+    canvas.width=w*ratio; canvas.height=h*ratio;
+    const ctx=canvas.getContext("2d");
+    ctx.setTransform(ratio,0,0,ratio,0,0);
+    return {w,h};
+  }
+
+  // Live-cell fluorescence palette — a GFP-style reporter (green) marks
+  // expressed genes, a DAPI-style nuclear counterstain (blue) marks every
+  // nucleus regardless of state, on the dim background every fluorescence
+  // image has. This is real, colour, and still genuinely "living" —
+  // GFP reporters are imaged in live cells routinely.
+  const COL_ON  = [58,208,132];   // GFP-positive cytoplasm — expressed
+  const COL_OFF = [30,42,46];     // unlabelled cytoplasm — silent, near background
+  const COL_NUC = [64,96,224];    // DAPI-stained nucleus — present in every cell
+  const COL_HALO= [120,200,190];  // faint cyan membrane rim
+
+  function renderTissueBuffer(){
+    const data = offImg.data;
+    for(let gy=0; gy<GRID_H; gy++){
+      const row = gy*GRID_W;
+      for(let gx=0; gx<GRID_W; gx++){
+        const idx = row+gx;
+        const site = regionIndex[idx];
+        const on = state[siteOwner[site]]===1;
+        const base = on ? COL_ON : COL_OFF;
+        const bright = siteBright[site];
+
+        let r=base[0]*bright, g=base[1]*bright, b=base[2]*bright;
+
+        // DAPI nucleus, offset slightly off-centre like a real cell —
+        // stains every nucleus, expressed or not
+        const nx0 = siteX[site]+siteNucOffX[site]*cellRadius, ny0 = siteY[site]+siteNucOffY[site]*cellRadius;
+        const ndx=gx-nx0, ndy=gy-ny0;
+        const nucR = cellRadius*0.32;
+        const nucFactor = Math.max(0, 1-Math.sqrt(ndx*ndx+ndy*ndy)/nucR);
+        const nf = nucFactor*nucFactor*0.85;
+        if(nf>0){ r=r*(1-nf)+COL_NUC[0]*nf; g=g*(1-nf)+COL_NUC[1]*nf; b=b*(1-nf)+COL_NUC[2]*nf; }
+
+        // faint cyan membrane rim at cell boundaries
+        const mem = regionMembrane[idx];
+        if(mem>0){ r=r*(1-mem)+COL_HALO[0]*mem; g=g*(1-mem)+COL_HALO[1]*mem; b=b*(1-mem)+COL_HALO[2]*mem; }
+
+        const grain=(Math.random()-0.5)*11;
+        const p = idx*4;
+        data[p]  =Math.max(0,Math.min(255, r+grain));
+        data[p+1]=Math.max(0,Math.min(255, g+grain));
+        data[p+2]=Math.max(0,Math.min(255, b+grain));
+        data[p+3] = 255;
+      }
+    }
+    offCtx.putImageData(offImg, 0, 0);
+  }
+
+  function bezierPt(a,mx,my,b,tt){
+    const u=1-tt;
+    return { x:u*u*a.x+2*u*tt*mx+tt*tt*b.x, y:u*u*a.y+2*u*tt*my+tt*tt*b.y };
+  }
+  function pseudoRand(seed){ const s=Math.sin(seed*12.9898)*43758.5453; return s-Math.floor(s); }
+
+  // amber signalling threads — like a fluorescent tracer channel overlaid
+  // on a grayscale phase-contrast image, a real and common microscopy
+  // technique, so active connections read clearly against the tissue
+  function drawFlowingThread(ctx,a,b,curvature,active,seed,flowT){
+    const mx=(a.x+b.x)/2 + (b.y-a.y)*curvature, my=(a.y+b.y)/2 - (b.x-a.x)*curvature;
+    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.quadraticCurveTo(mx,my,b.x,b.y);
+    ctx.strokeStyle = active ? "rgba(255,176,64,0.85)" : "rgba(0,0,0,0.20)";
+    ctx.lineWidth = active ? 1.6 : 0.7;
+    if(active){ ctx.shadowColor="rgba(255,176,64,0.65)"; ctx.shadowBlur=3; }
+    ctx.stroke();
+    ctx.shadowBlur=0;
+    const phase = (flowT*0.10 + pseudoRand(seed)) % 1;
+    const pt = bezierPt(a,mx,my,b,phase);
+    ctx.beginPath();
+    ctx.arc(pt.x,pt.y, active?2.4:1.1, 0, 7);
+    ctx.fillStyle = active ? "rgba(255,214,120,0.98)" : "rgba(0,0,0,0.30)";
+    ctx.fill();
+  }
+
+  function drawGraph(){
+    const {w,h} = fitCanvas(gCanvas);
+    const ctx = gCanvas.getContext("2d");
+    const now = performance.now();
+
+    if(!regionIndex) buildRegionMap();
+    renderTissueBuffer();
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(offCanvas, 0, 0, GRID_W, GRID_H, 0, 0, w, h);
+
+    const pts = positions.map(pos=>({ x: pos.x*w, y: pos.y*h }));
+    const scaleX = w/GRID_W;
+    const flowT = now*0.001;
+
+    // signalling web — gene→hyperedge→gene wiring, drawn in the same
+    // grayscale language as the phase-contrast tissue (fine pale threads,
+    // the way real fiber tracts read against unstained tissue) with a
+    // continuous flow of particles so it's always in motion
+    for(let i=0;i<n;i++){
+      hyperedges[i].forEach((he,j)=>{
+        const target = pts[i];
+        if(he.inputs.length===1){
+          const src = he.inputs[0];
+          if(src===i) return;
+          drawFlowingThread(ctx, pts[src], target, he.curveOut, state[src]===1, i*7+j*3, flowT);
+        } else {
+          let hx=0, hy=0;
+          he.inputs.forEach(s=>{ hx+=pts[s].x; hy+=pts[s].y; });
+          hx/=he.inputs.length; hy/=he.inputs.length;
+          const hub = { x: hx*0.65+target.x*0.35, y: hy*0.65+target.y*0.35 };
+          const anyActive = he.inputs.some(s=>state[s]===1);
+          he.inputs.forEach((s,m)=>{
+            drawFlowingThread(ctx, pts[s], hub, he.curveIn[m], state[s]===1, i*11+j*5+m*2, flowT);
+          });
+          drawFlowingThread(ctx, hub, target, he.curveOut, anyActive, i*13+j*7, flowT);
+          ctx.beginPath();
+          ctx.moveTo(hub.x, hub.y-3); ctx.lineTo(hub.x+3, hub.y);
+          ctx.lineTo(hub.x, hub.y+3); ctx.lineTo(hub.x-3, hub.y);
+          ctx.closePath();
+          ctx.fillStyle = anyActive ? "rgba(255,190,80,0.95)" : "rgba(0,0,0,0.28)";
+          ctx.fill();
+        }
+      });
+    }
+
+    // switch indicators — a thin fading ring, like a pathologist's pen
+    // mark circling a region of interest
+    pulses = pulses.filter(pu => now-pu.start < 900);
+    pulses.forEach(pu=>{
+      const age=(now-pu.start)/900;
+      const pos=pts[pu.node];
+      ctx.save();
+      ctx.setLineDash([3,3]);
+      ctx.beginPath();
+      ctx.arc(pos.x,pos.y,cellRadius*scaleX*1.3+age*10,0,7);
+      ctx.strokeStyle = `rgba(168,86,48,${(1-age)*0.85})`;
+      ctx.lineWidth=1.2;
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    // gene labels — small, unobtrusive annotation marks (as on an
+    // annotated pathology figure), not UI badges sitting on the tissue
+    pts.forEach((pos,i)=>{
+      ctx.beginPath();
+      ctx.arc(pos.x,pos.y,7,0,7);
+      ctx.fillStyle = "rgba(246,241,230,0.62)";
+      ctx.fill();
+      ctx.strokeStyle = "rgba(44,38,24,0.30)";
+      ctx.lineWidth=0.7;
+      ctx.stroke();
+      ctx.fillStyle = "#2c2618";
+      ctx.font = "8.5px Georgia, serif";
+      ctx.textAlign="center"; ctx.textBaseline="middle";
+      ctx.fillText(i, pos.x, pos.y+1);
+    });
+
+    requestAnimationFrame(drawGraph);
+  }
+
+  // ================================================================
+  // EXPRESSION RECORD (autoradiograph-style strip)
+  // ================================================================
+  const tCanvas=document.getElementById("tapeCanvas");
+  function drawTape(){
+    const cellW=7, cellH=Math.max(9,Math.min(22,150/n));
+    const maxCols=260;
+    const cols=Math.min(history.length,maxCols);
+    tCanvas.style.width="100%";
+    tCanvas.width=Math.max(tCanvas.clientWidth, cols*cellW);
+    tCanvas.height=n*cellH+10;
+    const ctx=tCanvas.getContext("2d");
+    ctx.fillStyle="#efe7d1";
+    ctx.fillRect(0,0,tCanvas.width,tCanvas.height);
+    const startIdx=history.length-cols;
+    for(let c=0;c<cols;c++){
+      const s=history[startIdx+c];
+      for(let r=0;r<n;r++){
+        ctx.fillStyle = s[r]==="1" ? "#3a3226" : "#e3d8b8";
+        ctx.fillRect(c*cellW, r*cellH+2, cellW-1, cellH-3);
+      }
+    }
+    tCanvas.parentElement.scrollLeft=tCanvas.width;
+  }
+
+  // ================================================================
+  // RULE TABLES / PQ
+  // ================================================================
+  function renderRuleTables(){
+    let html="";
+    for(let i=0;i<n;i++){
+      html+=`<table class="rules"><tr><th colspan="2">Gene ${i} — regulators [${inputs[i].join(", ")}]</th></tr>`;
+      const size=1<<k;
+      for(let x=0;x<size;x++){
+        const bits=x.toString(2).padStart(k,"0");
+        html+=`<tr><td>${k?bits:"(none)"}</td><td>${rules[i][x]}</td></tr>`;
+      }
+      html+=`</table>`;
+    }
+    document.getElementById("ruleTables").innerHTML=html;
+  }
+  function renderPQ(){
+    let html=`<table class="rules"><tr><th>Gene</th><th>p</th><th>q</th></tr>`;
+    for(let i=0;i<n;i++) html+=`<tr><td>${i}</td><td>${p[i]}</td><td>${q[i]}</td></tr>`;
+    html+=`</table>`;
+    document.getElementById("pqTable").innerHTML=html;
+  }
+
+  // ================================================================
+  // SCHEME UI
+  // ================================================================
+  function renderSchemeList(){
+    const el=document.getElementById("schemeList"); el.innerHTML="";
+    SCHEMES.forEach(s=>{
+      const div=document.createElement("div");
+      div.className="scheme-btn"+(s.id===scheme?" active":"");
+      div.innerHTML=`<span class="name">${s.name}</span><span class="desc">${s.desc}</span>`;
+      div.onclick=()=>{ scheme=s.id; renderSchemeList(); document.getElementById("schemeHint").textContent=SCHEME_HINTS[s.id]; updateReadout(); };
+      el.appendChild(div);
+    });
+    document.getElementById("schemeHint").textContent=SCHEME_HINTS[scheme];
+  }
+
+  // ================================================================
+  // CONTROLS
+  // ================================================================
+  function setRunning(v){
+    running=v;
+    document.getElementById("btnPlay").textContent= running? "❚❚ Pause" : "▶ Run";
+    document.getElementById("btnPlay").classList.toggle("on", running);
+    clearInterval(timer);
+    if(running) timer=setInterval(stepOnce, Math.max(30,1000/speed));
+  }
+  document.getElementById("btnPlay").onclick=()=>setRunning(!running);
+  document.getElementById("btnStep").onclick=()=>{ setRunning(false); stepOnce(); };
+  document.getElementById("btnResetT").onclick=()=>{ setRunning(false); randomizeState(); };
+  document.getElementById("btnNewNet").onclick=()=>{ setRunning(false); generateNetwork(); };
+  document.getElementById("btnNewState").onclick=()=>{ setRunning(false); randomizeState(); };
+  document.getElementById("btnRandPQ").onclick=()=>generatePQ();
+
+  document.getElementById("nSlider").oninput=(e)=>{ n=parseInt(e.target.value,10); document.getElementById("nVal").textContent=n; setRunning(false); generateNetwork(); };
+  document.getElementById("kSlider").oninput=(e)=>{ k=parseInt(e.target.value,10); document.getElementById("kVal").textContent=k; setRunning(false); updatePhaseReadout(); generateNetwork(); };
+  document.getElementById("speedSlider").oninput=(e)=>{ speed=parseInt(e.target.value,10); document.getElementById("speedVal").textContent=speed; if(running) setRunning(true); };
+
+  document.getElementById("pSlider").oninput=(e)=>{
+    biasP = parseInt(e.target.value,10)/100;
+    document.getElementById("pVal").textContent = biasP.toFixed(2);
+    updatePhaseReadout();
+  };
+  document.getElementById("pSlider").onchange=()=>{ setRunning(false); generateNetwork(); };
+  document.getElementById("lSlider").oninput=(e)=>{
+    hyperOrder = parseInt(e.target.value,10);
+    document.getElementById("lVal").textContent = hyperOrder;
+    setRunning(false); generateNetwork();
+  };
+  document.getElementById("topologySelect").onchange=(e)=>{ topology=e.target.value; setRunning(false); generateNetwork(); };
+
+  document.getElementById("btnPerturb").onclick=()=>{
+    twinState = state.slice();
+    const i = randInt(n);
+    twinState[i] = 1 - twinState[i];
+    twinActive = true;
+    twinHistory = [hammingDistance(state, twinState)/n];
+    drawDamageChart();
+  };
+  document.getElementById("btnStopTwin").onclick=()=>{
+    twinActive=false; twinState=null; twinHistory=[];
+    drawDamageChart();
+  };
+
+  function updatePhaseReadout(){
+    const denom = 2*biasP*(1-biasP);
+    const lambda = denom>0 ? Math.log(denom*k) : -Infinity;
+    document.getElementById("roLambda").textContent = isFinite(lambda) ? lambda.toFixed(3) : "−∞";
+    let label, cls;
+    if(!isFinite(lambda) || lambda < -0.08){ label="Ordered"; cls="point"; }
+    else if(lambda > 0.08){ label="Chaotic"; cls="loose"; }
+    else { label="Critical — edge of chaos"; cls="cycle"; }
+    document.getElementById("roPhase").innerHTML = `<span class="badge ${cls}">${label}</span>`;
+    document.getElementById("roKc").textContent = denom>0 ? `${(1/denom).toFixed(2)}  (current k = ${k})` : `∞  (current k = ${k})`;
+  }
+
+  function drawDamageChart(){
+    const canvas=document.getElementById("damageCanvas");
+    const {w,h}=fitCanvas(canvas);
+    const ctx=canvas.getContext("2d");
+    ctx.fillStyle="#f6f1e2"; ctx.fillRect(0,0,w,h);
+    const padL=30,padB=8,padT=10,padR=10;
+    const plotW=w-padL-padR, plotH=h-padT-padB;
+    ctx.strokeStyle="rgba(44,38,24,0.4)"; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(padL,padT); ctx.lineTo(padL,padT+plotH); ctx.lineTo(padL+plotW,padT+plotH); ctx.stroke();
+    ctx.fillStyle="#9a8f74"; ctx.font="9px Georgia, serif"; ctx.textAlign="right";
+    [0,0.5,1].forEach(v=>{
+      const y=padT+plotH-v*plotH;
+      ctx.fillText(v.toFixed(1), padL-6, y+3);
+      ctx.strokeStyle="rgba(44,38,24,0.08)";
+      ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(padL+plotW,y); ctx.stroke();
+    });
+    if(!twinActive || twinHistory.length<2){
+      ctx.fillStyle="#9a8f74"; ctx.textAlign="center"; ctx.font="italic 11px Georgia, serif";
+      ctx.fillText("no active trace — flip a gene to begin", padL+plotW/2, padT+plotH/2);
+      return;
+    }
+    ctx.strokeStyle = "#a85630"; ctx.lineWidth=1.8;
+    ctx.beginPath();
+    twinHistory.forEach((v,i)=>{
+      const x=padL+plotW*(i/Math.max(1,twinHistory.length-1)), y=padT+plotH-v*plotH;
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+  }
+
+  // ================================================================
+  // EXHAUSTIVE CENSUS (CRBN transition structure of this specimen)
+  // ================================================================
+  function runCensus(){
+    const total = 1<<n;
+    const nextOf = new Int32Array(total);
+    const arr = new Array(n);
+    for(let s=0;s<total;s++){
+      for(let i=0;i<n;i++) arr[i]=(s>>i)&1;
+      let ns=0;
+      for(let i=0;i<n;i++) if(computeNext(i,arr)) ns|=(1<<i);
+      nextOf[s]=ns;
+    }
+    const indeg = new Int32Array(total);
+    for(let s=0;s<total;s++) indeg[nextOf[s]]++;
+    let gardenCount=0; for(let s=0;s<total;s++) if(indeg[s]===0) gardenCount++;
+
+    const attractorIdOf = new Int32Array(total).fill(-1);
+    const attractors = [];
+    for(let s=0;s<total;s++){
+      if(attractorIdOf[s]!==-1) continue;
+      const path=[]; const pathPos=new Map();
+      let cur=s;
+      while(attractorIdOf[cur]===-1 && !pathPos.has(cur)){
+        pathPos.set(cur, path.length);
+        path.push(cur);
+        cur = nextOf[cur];
+      }
+      let id;
+      if(attractorIdOf[cur]!==-1){
+        id = attractorIdOf[cur];
+      } else {
+        const startIdx = pathPos.get(cur);
+        id = attractors.length;
+        attractors.push({length: path.length-startIdx});
+      }
+      path.forEach(st=>{ attractorIdOf[st]=id; });
+    }
+    const pointCount = attractors.filter(a=>a.length===1).length;
+    const cycleCount = attractors.filter(a=>a.length>1).length;
+    const avgLen = attractors.reduce((s,a)=>s+a.length,0)/attractors.length;
+    const gDensity = gardenCount/total*100;
+
+    const basinSize = new Array(attractors.length).fill(0);
+    for(let s=0;s<total;s++) basinSize[attractorIdOf[s]]++;
+
+    document.getElementById("censusReadout").innerHTML = `
+      <div class="cell"><div class="k">States walked</div><div class="v small">2<sup>${n}</sup> = ${total}</div></div>
+      <div class="cell"><div class="k">Attractors</div><div class="v small">${attractors.length} (${pointCount} pt, ${cycleCount} cyc)</div></div>
+      <div class="cell" style="grid-column:1/3;"><div class="k">Average attractor length</div><div class="v small">${avgLen.toFixed(2)}</div></div>
+      <div class="cell" style="grid-column:1/3;"><div class="k">Garden-of-Eden density (G)</div><div class="v small">${gDensity.toFixed(1)}% of states have no predecessor</div></div>
+    `;
+    drawBasinHistogram(basinSize, total);
+  }
+
+  function drawBasinHistogram(basinSize, total){
+    const canvas = document.getElementById("censusHistCanvas");
+    const {w,h} = fitCanvas(canvas);
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle="#f6f1e2"; ctx.fillRect(0,0,w,h);
+    const order = basinSize.map((v,i)=>[v,i]).sort((a,b)=>b[0]-a[0]);
+    const padL=4, padR=4, padT=6, padB=4;
+    const barGap=3;
+    const barW = Math.max(2, (w-padL-padR)/order.length - barGap);
+    const maxV = Math.max(...basinSize,1);
+    order.forEach(([v],idx)=>{
+      const bh = (v/maxV)*(h-padT-padB);
+      const x = padL+idx*(barW+barGap);
+      const y = h-padB-bh;
+      ctx.fillStyle = "#8a9c72";
+      ctx.fillRect(x,y,barW,bh);
+    });
+    document.getElementById("censusHistCaption").textContent =
+      `Fig. 5 — Basin size of each of the ${basinSize.length} attractor(s) found, largest first (out of ${total} states).`;
+  }
+
+  document.getElementById("btnCensus").onclick=()=>{
+    const b=document.getElementById("btnCensus");
+    b.textContent="Walking state space…"; b.disabled=true;
+    setTimeout(()=>{ runCensus(); b.textContent="Run exhaustive census"; b.disabled=false; }, 20);
+  };
+
+  // ================================================================
+  // DERRIDA PLOT — empirical order/chaos diagnostic for this specimen
+  // ================================================================
+  function sampleDerrida(){
+    const trials = 40;
+    const H0list = []; for(let hh=1; hh<=n; hh++) H0list.push(hh);
+    const results = H0list.map(h0=>{
+      let total=0;
+      for(let t=0;t<trials;t++){
+        const a=[]; for(let i=0;i<n;i++) a.push(Math.random()<0.5?1:0);
+        const b=a.slice();
+        const idxs=[...Array(n).keys()];
+        for(let i=idxs.length-1;i>0;i--){ const j=randInt(i+1); const tmp=idxs[i]; idxs[i]=idxs[j]; idxs[j]=tmp; }
+        idxs.slice(0,h0).forEach(ix=>{ b[ix]=1-b[ix]; });
+        const an=a.map((_,i)=>computeNext(i,a));
+        const bn=b.map((_,i)=>computeNext(i,b));
+        total+=hammingDistance(an,bn);
+      }
+      return total/trials;
+    });
+    drawDerridaChart(H0list, results);
+  }
+
+  function drawDerridaChart(H0list, results){
+    const canvas=document.getElementById("derridaCanvas");
+    const {w,h}=fitCanvas(canvas);
+    const ctx=canvas.getContext("2d");
+    ctx.fillStyle="#f6f1e2"; ctx.fillRect(0,0,w,h);
+    const padL=32,padB=22,padT=10,padR=10;
+    const plotW=w-padL-padR, plotH=h-padT-padB;
+    const maxV = n;
+
+    ctx.strokeStyle="rgba(44,38,24,0.4)"; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(padL,padT); ctx.lineTo(padL,padT+plotH); ctx.lineTo(padL+plotW,padT+plotH); ctx.stroke();
+    ctx.fillStyle="#9a8f74"; ctx.font="9px Georgia, serif"; ctx.textAlign="right";
+    for(let g=0; g<=4; g++){
+      const val=maxV*g/4, y=padT+plotH-(val/maxV)*plotH;
+      ctx.fillText(val.toFixed(0), padL-6, y+3);
+      ctx.strokeStyle="rgba(44,38,24,0.08)";
+      ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(padL+plotW,y); ctx.stroke();
+    }
+    ctx.textAlign="center";
+    ctx.fillStyle="#665c46"; ctx.fillText("H\u2080 (initial distance)", padL+plotW/2, padT+plotH+16);
+
+    // reference diagonal H1 = H0
+    ctx.save();
+    ctx.setLineDash([3,3]);
+    ctx.strokeStyle="rgba(44,38,24,0.5)"; ctx.lineWidth=1;
+    ctx.beginPath();
+    ctx.moveTo(padL, padT+plotH); ctx.lineTo(padL+plotW, padT+plotH-(maxV/maxV)*plotH);
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.strokeStyle="#a85630"; ctx.lineWidth=2;
+    ctx.beginPath();
+    H0list.forEach((h0,i)=>{
+      const x=padL+plotW*(h0/maxV), y=padT+plotH-(results[i]/maxV)*plotH;
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+    H0list.forEach((h0,i)=>{
+      const x=padL+plotW*(h0/maxV), y=padT+plotH-(results[i]/maxV)*plotH;
+      ctx.fillStyle="#a85630"; ctx.beginPath(); ctx.arc(x,y,2.6,0,7); ctx.fill();
+    });
+  }
+  document.getElementById("btnDerrida").onclick=()=>{
+    const b=document.getElementById("btnDerrida");
+    b.textContent="Sampling…"; b.disabled=true;
+    setTimeout(()=>{ sampleDerrida(); b.textContent="Sample Derrida plot"; b.disabled=false; }, 20);
+  };
+
+  // ================================================================
+  // CELL FATE MAP — same genome, different starting patterns, different
+  // attractors: Kauffman's "cell types are attractors" made concrete
+  // ================================================================
+  function growOneFate(capSteps){
+    let st=[]; for(let i=0;i<n;i++) st.push(Math.random()<0.5?1:0);
+    const hist=[st.join("")];
+    for(let step=0; step<capSteps; step++){
+      const base=st.slice();
+      st = base.map((_,i)=>computeNext(i,base));
+      const s=st.join("");
+      const idx=hist.indexOf(s);
+      hist.push(s);
+      if(idx!==-1) return {state:st, period:hist.length-1-idx, steps:step+1};
+      if(hist.length>400) hist.shift();
+    }
+    return {state:st, period:null, steps:capSteps};
+  }
+  function growFates(){
+    const grid = document.getElementById("fateGrid");
+    grid.innerHTML="";
+    for(let f=0; f<4; f++){
+      const result = growOneFate(300);
+      const wrap = document.createElement("div"); wrap.className="fate-cell";
+      const cnv = document.createElement("canvas"); cnv.width=160; cnv.height=90;
+      wrap.appendChild(cnv);
+      const label = document.createElement("div"); label.className="fate-label";
+      label.textContent = result.period
+        ? `Attractor period ${result.period} · reached in ${result.steps} steps`
+        : `No attractor within ${result.steps} steps`;
+      wrap.appendChild(label);
+      grid.appendChild(wrap);
+      const ctx = cnv.getContext("2d");
+      ctx.fillStyle="#8a8a8a"; ctx.fillRect(0,0,160,90);
+      const cols=Math.ceil(Math.sqrt(n)), rows=Math.ceil(n/cols);
+      const cw=160/cols, ch=90/rows;
+      for(let i=0;i<n;i++){
+        const cx=(i%cols)*cw, cy=Math.floor(i/cols)*ch;
+        const v = result.state[i]===1 ? 190 : 96;
+        ctx.fillStyle=`rgb(${v},${v},${v})`;
+        ctx.fillRect(cx+1,cy+1,cw-2,ch-2);
+      }
+    }
+  }
+  document.getElementById("btnGrowFates").onclick=growFates;
+
+  // ================================================================
+  // SPECIMEN ARCHIVE — save/load the exact wiring+rules, export PNG
+  // ================================================================
+  function exportSpecimen(){
+    const data = {
+      n, k, hyperOrder, biasP, topology,
+      rules: rules.map(r=>Array.from(r)),
+      hyperedges: hyperedges.map(hes=>hes.map(he=>({inputs:he.inputs, table:Array.from(he.table), curveIn:he.curveIn, curveOut:he.curveOut}))),
+      p, q, positions, nodeSeed
+    };
+    const blob = new Blob([JSON.stringify(data)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href=url; a.download="rbn-specimen.json"; a.click();
+    URL.revokeObjectURL(url);
+  }
+  function importSpecimenFile(file){
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      try{
+        const data = JSON.parse(e.target.result);
+        setRunning(false);
+        n=data.n; k=data.k; hyperOrder=data.hyperOrder; biasP=data.biasP; topology=data.topology;
+        document.getElementById("nSlider").value=n; document.getElementById("nVal").textContent=n;
+        document.getElementById("kSlider").value=k; document.getElementById("kVal").textContent=k;
+        document.getElementById("lSlider").value=hyperOrder; document.getElementById("lVal").textContent=hyperOrder;
+        document.getElementById("pSlider").value=Math.round(biasP*100); document.getElementById("pVal").textContent=biasP.toFixed(2);
+        document.getElementById("topologySelect").value=topology;
+        rules = data.rules.map(r=>Uint8Array.from(r));
+        hyperedges = data.hyperedges.map(hes=>hes.map(he=>({inputs:he.inputs, table:Uint8Array.from(he.table), curveIn:he.curveIn, curveOut:he.curveOut})));
+        inputs = hyperedges.map(hes=>{ const flat=[]; hes.forEach(he=>he.inputs.forEach(s=>flat.push(s))); return flat; });
+        p=data.p; q=data.q; positions=data.positions; nodeSeed=data.nodeSeed;
+        buildRegionMap();
+        randomizeState();
+        renderRuleTables();
+        renderPQ();
+        updatePhaseReadout();
+      }catch(err){ alert("Could not load specimen file: "+err.message); }
+    };
+    reader.readAsText(file);
+  }
+  document.getElementById("btnExportSpecimen").onclick=exportSpecimen;
+  document.getElementById("btnImportSpecimen").onclick=()=>document.getElementById("importFile").click();
+  document.getElementById("importFile").onchange=(e)=>{ if(e.target.files[0]) importSpecimenFile(e.target.files[0]); };
+  document.getElementById("btnExportPNG").onclick=()=>{
+    const link=document.createElement("a");
+    link.download="rbn-tissue.png";
+    link.href=gCanvas.toDataURL("image/png");
+    link.click();
+  };
+
+  window.addEventListener("resize", ()=>{ drawTape(); drawDamageChart(); });
+
+  // ================================================================
+  // STATISTICS BENCH
+  // ================================================================
+  function runSingleTrial(nn,kk,schemeId,capSteps){
+    const ins=[], rls=[];
+    for(let i=0;i<nn;i++){
+      const a=[]; for(let j=0;j<kk;j++) a.push(randInt(nn));
+      ins.push(a);
+      const size=1<<kk; const tbl=new Uint8Array(size);
+      for(let x=0;x<size;x++) tbl[x]=Math.random()<0.5?1:0;
+      rls.push(tbl);
+    }
+    const pp=[],qq=[]; for(let i=0;i<nn;i++){ pp.push(1+randInt(4)); qq.push(0); }
+    let st=[]; for(let i=0;i<nn;i++) st.push(Math.random()<0.5?1:0);
+    const next=(i,src)=>{ let idx=0; for(let j=0;j<ins[i].length;j++) idx=(idx<<1)|src[ins[i][j]]; return rls[i][idx]; };
+    const hist=[st.join("")]; let tt=0;
+    for(let step=0; step<capSteps; step++){
+      if(schemeId==="CRBN"){ const base=st.slice(); st=base.map((_,i)=>next(i,base)); }
+      else if(schemeId==="ARBN"){ const i=randInt(nn); st[i]=next(i,st); }
+      else if(schemeId==="DARBN"){ for(let i=0;i<nn;i++) if((tt%pp[i])===qq[i]) st[i]=next(i,st); }
+      else if(schemeId==="GARBN"){ const base=st.slice(); const nx=base.slice(); for(let i=0;i<nn;i++) if(Math.random()<0.5) nx[i]=next(i,base); st=nx; }
+      else if(schemeId==="DGARBN"){ const base=st.slice(); const nx=base.slice(); for(let i=0;i<nn;i++) if((tt%pp[i])===qq[i]) nx[i]=next(i,base); st=nx; }
+      tt++;
+      const s=st.join(""); const idx=hist.indexOf(s); hist.push(s);
+      if(idx!==-1) return tt-idx;
+      if(hist.length>400) hist.shift();
+    }
+    return null;
+  }
+
+  function runExperiment(){
+    const kk=parseInt(document.getElementById("expK").value,10);
+    const trials=parseInt(document.getElementById("expTrials").value,10);
+    const ns=[3,4,5,6,7,8]; const cap=250;
+    const results={}; SCHEMES.forEach(s=>results[s.id]=[]);
+    ns.forEach(nn=>{
+      SCHEMES.forEach(s=>{
+        let total=0,found=0;
+        for(let tr=0;tr<trials;tr++){ const per=runSingleTrial(nn,kk,s.id,cap); if(per!==null){ total+=per; found++; } }
+        results[s.id].push(found? total/found : 0);
+      });
+    });
+    drawExperiment(ns,results);
+  }
+
+  function drawExperiment(ns, results){
+    const canvas=document.getElementById("expCanvas");
+    const {w,h}=fitCanvas(canvas);
+    const ctx=canvas.getContext("2d");
+    ctx.fillStyle="#f6f1e2"; ctx.fillRect(0,0,w,h);
+    const padL=36,padB=24,padT=12,padR=12;
+    const plotW=w-padL-padR, plotH=h-padT-padB;
+    let maxV=1; Object.values(results).forEach(arr=>arr.forEach(v=>maxV=Math.max(maxV,v)));
+    maxV=Math.ceil(maxV*1.15)||1;
+
+    ctx.strokeStyle="rgba(44,38,24,0.4)"; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(padL,padT); ctx.lineTo(padL,padT+plotH); ctx.lineTo(padL+plotW,padT+plotH); ctx.stroke();
+    ctx.fillStyle="#9a8f74"; ctx.font="9.5px Georgia, serif"; ctx.textAlign="right";
+    for(let g=0; g<=4; g++){
+      const val=maxV*g/4, y=padT+plotH-(val/maxV)*plotH;
+      ctx.fillText(val.toFixed(1), padL-6, y+3);
+      ctx.strokeStyle="rgba(44,38,24,0.08)";
+      ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(padL+plotW,y); ctx.stroke();
+    }
+    ctx.textAlign="center";
+    ns.forEach((nn,i)=>{ const x=padL+plotW*(i/(ns.length-1)); ctx.fillStyle="#665c46"; ctx.fillText("n="+nn, x, padT+plotH+16); });
+
+    SCHEMES.forEach(s=>{
+      const arr=results[s.id]; const color=SCHEME_COLOR[s.id];
+      ctx.strokeStyle=color; ctx.lineWidth=1.8;
+      ctx.beginPath();
+      arr.forEach((v,i)=>{ const x=padL+plotW*(i/(ns.length-1)), y=padT+plotH-(v/maxV)*plotH; if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); });
+      ctx.stroke();
+      arr.forEach((v,i)=>{ const x=padL+plotW*(i/(ns.length-1)), y=padT+plotH-(v/maxV)*plotH; ctx.fillStyle=color; ctx.beginPath(); ctx.arc(x,y,2.6,0,7); ctx.fill(); });
+    });
+
+    document.getElementById("expLegend").innerHTML = SCHEMES.map(s=>`<span><span class="sw" style="background:${SCHEME_COLOR[s.id]};"></span>${s.id}</span>`).join("");
+  }
+
+  document.getElementById("btnRunExp").onclick=()=>{
+    const b=document.getElementById("btnRunExp");
+    b.textContent="Running…"; b.disabled=true;
+    setTimeout(()=>{ runExperiment(); b.textContent="Run experiment"; b.disabled=false; }, 30);
+  };
+
+  // ================================================================
+  // INIT
+  // ================================================================
+  (function specimenLabel(){
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let id = "RBN-";
+    for(let i=0;i<6;i++) id += chars[Math.floor(Math.random()*chars.length)];
+    document.getElementById("specId").textContent = id;
+    document.getElementById("specDate").textContent = new Date().toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"});
+  })();
+  renderSchemeList();
+  generateNetwork();
+  requestAnimationFrame(drawGraph);
+})();
+</script>
+</body>
+</html>
