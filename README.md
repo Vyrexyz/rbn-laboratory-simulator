@@ -1,9 +1,10 @@
+
 # Random Boolean Network (RBN) Laboratory Simulator
 
 A self-contained, offline Random Boolean Network laboratory and simulation environment — delivered as a single HTML file with no installation, server, or external dependencies required. Open it in any browser and it runs.
 
 ## What it does
-
+<img width="690" height="380" alt="rbn-tissue" src="https://github.com/user-attachments/assets/3ab128a5-530d-4071-8e13-ec1d36f0bb39" />
 Random Boolean Networks are a foundational model in complex systems and computational biology, used to study how simple rules produce emergent, organism-like dynamics. This simulator lets you build, run, and classify RBNs using five separate published classification schemes, rather than a single ad hoc method:
 
 - Gershenson (2002)
