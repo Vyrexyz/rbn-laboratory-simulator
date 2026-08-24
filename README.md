@@ -20,11 +20,16 @@ Each framework translates peer-reviewed theoretical work from network science li
 
 Instead of a conventional technical dashboard, the interface uses a biologically realistic visual language:
 
-- A dense Voronoi-based phase-contrast tissue rendering system to represent network structure the way a microscopy image would
+1 A dense Voronoi-based phase-contrast tissue rendering system to represent network structure the way a microscopy image would
+
 <img width="1919" height="912" alt="Living tissue view — network mid-simulation" src="https://github.com/user-attachments/assets/7002dc38-5b06-4286-8af7-5b9993700b5f" />
-- Amber fluorescent signalling-thread overlays layered on top to visualize signal propagation through the network
+
+2 Amber fluorescent signalling-thread overlays layered on top to visualize signal propagation through the network
+
 <img width="1919" height="912" alt="biologically-realistic-visual" src="https://github.com/user-attachments/assets/6a4b28c3-b958-4e88-a7ac-e0210e13fe9c" />
-- A field-notebook, parchment-style aesthetic — built to feel like a lab instrument, not a generic app
+
+3 A field-notebook, parchment-style aesthetic — built to feel like a lab instrument, not a generic app
+  
 <img width="1919" height="907" alt="Cell fate map" src="https://github.com/user-attachments/assets/1afd59d8-4d78-4166-8928-db840360d909" />
 
 ## How to run
